@@ -7,11 +7,11 @@ class PathKitTests: XCTestCase {
 
   override func setUp() {
     super.setUp()
-    Path.current = Path(__FILE__).parent()
+    Path.current = Path(#file).parent()
   }
 
   var fixtures: Path {
-    return Path(__FILE__).parent() + "Fixtures"
+    return Path(#file).parent() + "Fixtures"
   }
 
   func testSeparator() {
@@ -20,7 +20,7 @@ class PathKitTests: XCTestCase {
 
   func testCurrent() {
     let path = Path.current
-    XCTAssertEqual(path.description, NSFileManager().currentDirectoryPath)
+    XCTAssertEqual(path.description, FileManager().currentDirectoryPath)
   }
 
   // MARK: Initialization
@@ -277,8 +277,8 @@ class PathKitTests: XCTestCase {
 
   func testReadData() {
     let path = Path("/etc/manpaths")
-    let contents:NSData? = AssertNoThrow(try path.read())
-    let string = NSString(data:contents!, encoding: NSUTF8StringEncoding)!
+    let contents:Data? = AssertNoThrow(try path.read())
+    let string = NSString(data:contents!, encoding: String.Encoding.utf8.rawValue)!
 
     XCTAssertTrue(string.hasPrefix("/usr/share/man"))
   }
@@ -287,7 +287,7 @@ class PathKitTests: XCTestCase {
     let path = Path("/tmp/pathkit-testing")
 
     do {
-      try path.read() as NSData
+      try path.read() as Data
       XCTFail("Error was not thrown from `read()`")
     } catch let error as NSError {
       XCTAssertEqual(error.domain, NSCocoaErrorDomain)
@@ -318,7 +318,7 @@ class PathKitTests: XCTestCase {
 
   func testWriteData() {
     let path = Path("/tmp/pathkit-testing")
-    let data = "Hi".dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
+    let data = "Hi".data(using: String.Encoding.utf8, allowLossyConversion: true)
 
     XCTAssertFalse(path.exists)
 
@@ -329,7 +329,7 @@ class PathKitTests: XCTestCase {
 
   func testWriteDataThrowsOnFailure() {
     let path = Path("/")
-    let data = "Hi".dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true)
+    let data = "Hi".data(using: String.Encoding.utf8, allowLossyConversion: true)
 
     do {
       try path.write(data!)
@@ -402,11 +402,11 @@ class PathKitTests: XCTestCase {
   func testSequenceType() {
     let path = fixtures + "directory"
     var children = ["child", "subdirectory"].map { path + $0 }
-    let generator = path.generate()
+    let generator = path.makeIterator()
     while let child = generator.next() {
       generator.skipDescendants()
-      if let index = children.indexOf(child) {
-        children.removeAtIndex(index)
+      if let index = children.index(of: child) {
+        children.remove(at: index)
       } else {
         XCTFail("Generated unexpected element: <\(child)>")
       }
